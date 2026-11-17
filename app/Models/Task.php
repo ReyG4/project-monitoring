@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\TaskPriority;
+use App\Enums\TaskStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -22,7 +24,8 @@ class Task extends Model
             'budget_plan' => 'decimal:2',
             'planned_start' => 'date',
             'target_end' => 'date',
-            'target_end' => 'date',
+            'status' => TaskStatus::class,
+            'priority' => TaskPriority::class,
         ];
     }
 
@@ -40,5 +43,12 @@ class Task extends Model
 
     public function expenses(): HasMany{
         return $this->hasMany(Expense::class);
+    }
+
+    public function isOverdue(): bool
+    {
+        return $this->target_end !== null 
+        && $this->status !== TaskStatus::Completed 
+        && $this->target_end->isBefore(today());
     }
 }
