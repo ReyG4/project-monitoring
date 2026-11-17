@@ -7,7 +7,7 @@ use Illuminate\Validation\Rules\InArray;
 enum ProjectStatus: string{
     case Planning = 'perencanaan';
     case Active = 'berjalan';
-    case Submited = 'diajukan';
+    case Submitted = 'diajukan';
     case Revision = 'revisi';
     case Done = 'Selesai';
 
@@ -15,7 +15,7 @@ enum ProjectStatus: string{
         return match ($this){
             self::Planning => 'Perencanaan',
             self::Active => 'Berjalan',
-            self::Submited => 'Diajukan',
+            self::Submitted => 'Diajukan',
             self::Revision => 'Revisi',
             self::Done => 'Selesai',
         };

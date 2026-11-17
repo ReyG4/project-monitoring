@@ -47,7 +47,7 @@ class ProjectPolicy
      */
     public function delete(User $user, Project $project): bool
     {
-        return $this->owns($user, $project) && $project->status !== ProjectStatus::Submited;
+        return $this->owns($user, $project) && $project->status !== ProjectStatus::Submitted;
     }
 
     private function owns(User $user, Project $project): bool{

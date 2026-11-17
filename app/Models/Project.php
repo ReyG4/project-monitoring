@@ -37,7 +37,7 @@ class Project extends Model
         return match ($user->role){
             Role::ProjectManager =>$query->where('created_by', $user->id),
             Role::Tester => $query->whereIn('status', [
-                ProjectStatus::Submited->value,
+                ProjectStatus::Submitted->value,
                 ProjectStatus::Revision->value,
                 ProjectStatus::Done->value,
             ]),
