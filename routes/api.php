@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\TaskController;
+use App\Http\Controllers\Api\TaskWeightController;
 
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 
@@ -13,4 +14,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::apiResource('projects', ProjectController::class);
     Route::apiResource('projects.tasks', TaskController::class)->shallow();
+    Route::put('projects/{project}/weights', [TaskWeightController::class, 'update']);
 });
