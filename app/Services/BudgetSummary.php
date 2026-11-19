@@ -4,10 +4,6 @@ namespace App\Services;
 
 final class BudgetSummary
 {
-    /**
-     * Create a new class instance.
-     */
-
     public readonly float $plan;
     public readonly float $actual;
 
@@ -17,18 +13,33 @@ final class BudgetSummary
         $this->actual = round($actual, 2);
     }
 
-    public function remaining(): float{
+    public function remaining(): float
+    {
         return round($this->plan - $this->actual, 2);
     }
 
-    public function usagePercent(): ?float{
-        if($this->plan <= 0){
+    public function usagePercent(): ?float
+    {
+        if ($this->plan <= 0) {
             return null;
         }
+
         return round($this->actual / $this->plan * 100, 2);
     }
 
-    public function isOverBudget(): bool{
+    public function isOverBudget(): bool
+    {
         return $this->actual > $this->plan;
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'plan' => $this->plan,
+            'actual' => $this->actual,
+            'remaining' => $this->remaining(),
+            'usage_percent' => $this->usagePercent(),
+            'over_budget' => $this->isOverBudget(),
+        ];
     }
 }

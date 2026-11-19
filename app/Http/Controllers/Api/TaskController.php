@@ -88,6 +88,12 @@ class TaskController extends Controller
             ]);
         }
 
+        if ($request->has('budget_plan') && $task->children()->exists()) {
+            throw ValidationException::withMessages([
+                'budget_plan' => 'Anggaran aktivitas yang punya subaktivitas dihitung dari subaktivitasnya dan tidak bisa diisi manual.',
+            ]);
+        }
+
         $task->update($request->validated());
 
         return new TaskResource($task->refresh()->loadMissing('children.children'));
