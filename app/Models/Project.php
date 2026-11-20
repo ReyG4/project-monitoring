@@ -44,4 +44,8 @@ class Project extends Model
             default => $query->whereRaw('1 = 0'),
         };
     }
+    
+    public function reviews(): HasMany{
+        return $this->hasMany(ProjectReview::class);
+    }
 }

@@ -1,0 +1,16 @@
+:root { --navy: #12305c; --blue: #2563eb; --bg: #f5f8fc; --text: #1b2a41; }
+
+body { background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; }
+
+.sidebar { position: fixed; top: 0; left: 0; width: 230px; min-height: 100vh; background: var(--navy);
+  padding: 1.25rem 1rem; display: flex; flex-direction: column; }
+.sidebar .brand { color: #fff; font-weight: 700; font-size: 1.15rem; margin-bottom: 1.5rem; }
+.sidebar .nav-link { color: #b8c7e0; border-radius: .6rem; padding: .6rem .8rem; }
+.sidebar .nav-link:hover { color: #fff; }
+.sidebar .nav-link.active { background: var(--blue); color: #fff; }
+
+.main { margin-left: 230px; padding: 2rem; }
+
+.card-project { border: 1px solid #e3eaf4; border-radius: 1rem; cursor: pointer; transition: box-shadow .15s; }
+.card-project:hover { box-shadow: 0 4px 14px rgba(18, 48, 92, .12); }
+.progress { height: .5rem; }

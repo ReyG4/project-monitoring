@@ -18,13 +18,15 @@ class ProjectController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request): AnonymousResourceCollection
-    {
+    public function index(Request $request): AnonymousResourceCollection{
         Gate::authorize('viewAny', Project::class);
 
-        $project = Project::visibleTo($request->user()) -> latest()->paginate(15);
+        $projects = Project::visibleTo($request->user())
+            ->with('tasks.children.children')
+            ->latest()
+            ->paginate(15);
 
-        return ProjectResource::collection($project);
+        return ProjectResource::collection($projects);
     }
 
     /**
@@ -46,6 +48,8 @@ class ProjectController extends Controller
     public function show(Project $project): ProjectResource
     {
         Gate::authorize('view', $project);
+
+        $project->loadMissing('tasks.children.children');
 
         return new ProjectResource($project);
     }

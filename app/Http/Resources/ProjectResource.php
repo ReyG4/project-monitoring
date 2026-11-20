@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Services\ProgressCalculator;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -15,6 +16,10 @@ class ProjectResource extends JsonResource
             'description' => $this->description,
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
+            'progress' => $this->when(
+                $this->relationLoaded('tasks'),
+                fn () => app(ProgressCalculator::class)->forProject($this->resource)
+            ),
             'start_date' => $this->start_date?->toDateString(),
             'target_end_date' => $this->target_end_date?->toDateString(),
             'activated_at' => $this->activated_at?->toIso8601String(),
