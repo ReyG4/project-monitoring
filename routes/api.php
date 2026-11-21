@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\TaskWeightController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\ProjectBudgetController;
+use App\Http\Controllers\Api\ProjectWorkflowController;
 
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 
@@ -19,4 +20,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('projects/{project}/weights', [TaskWeightController::class, 'update']);
     Route::apiResource('tasks.expenses', ExpenseController::class)->shallow()->except('show');
     Route::get('projects/{project}/budget', [ProjectBudgetController::class, 'show']);
+    Route::get('projects/{project}/readiness', [ProjectWorkflowController::class, 'readiness']);
+    Route::post('projects/{project}/activate', [ProjectWorkflowController::class, 'activate']);
+    Route::post('projects/{project}/submit', [ProjectWorkflowController::class, 'submit']);
+    Route::post('projects/{project}/review', [ProjectWorkflowController::class, 'review']);
+    Route::get('projects/{project}/reviews', [ProjectWorkflowController::class, 'reviews']);
 });

@@ -69,4 +69,19 @@ class ProjectPolicy
     {
         return false;
     }
+
+    public function activate(User $user, Project $project): bool
+    {
+        return $this->owns($user, $project);
+    }
+
+    public function submit(User $user, Project $project): bool
+    {
+        return $this->owns($user, $project);
+    }
+
+    public function review(User $user, Project $project): bool
+    {
+        return $user->role === Role::Tester && $this->view($user, $project);
+    }
 }
