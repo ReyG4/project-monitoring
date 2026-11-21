@@ -34,7 +34,8 @@ function formatDate(iso) {
 }
 
 function formatRupiah(value) {
-  return 'Rp' + Number(value || 0).toLocaleString('id-ID');
+  const number = Number(value || 0);
+  return (number < 0 ? '-' : '') + 'Rp' + Math.abs(number).toLocaleString('id-ID');
 }
 
 async function logout() {

@@ -27,6 +27,21 @@
       </div>
     </div>
 
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-lg-3"><div class="card"><div class="card-body py-3">
+        <div class="text-muted small">Anggaran rencana</div><div class="h5 mb-0" id="b-plan">Rp0</div>
+      </div></div></div>
+      <div class="col-6 col-lg-3"><div class="card"><div class="card-body py-3">
+        <div class="text-muted small">Biaya aktual</div><div class="h5 mb-0" id="b-actual">Rp0</div>
+      </div></div></div>
+      <div class="col-6 col-lg-3"><div class="card"><div class="card-body py-3">
+        <div class="text-muted small">Sisa anggaran</div><div class="h5 mb-0" id="b-remaining">Rp0</div>
+      </div></div></div>
+      <div class="col-6 col-lg-3"><div class="card"><div class="card-body py-3">
+        <div class="text-muted small">Penggunaan anggaran</div><div class="h5 mb-0" id="b-percent">N/A</div>
+      </div></div></div>
+    </div>
+
     <div class="d-flex justify-content-between align-items-center mb-2">
       <h2 class="h5 mb-0">Aktivitas</h2>
       <button id="btn-add-root" class="btn btn-primary btn-sm d-none">+ Tambah aktivitas</button>
@@ -38,8 +53,9 @@
         <table class="table align-middle mb-0">
           <thead class="table-light">
             <tr>
-              <th>Nama</th><th>PIC</th><th class="text-end">Bobot</th><th>Deadline</th>
-              <th>Status</th><th style="width: 190px;">Progres</th><th></th>
+              <th>Nama</th><th>PIC</th><th class="text-end">Bobot</th><th>Deadline</th><th>Status</th>
+              <th class="text-end">Anggaran</th><th class="text-end">Biaya aktual</th>
+              <th style="width: 170px;">Progres</th><th></th>
             </tr>
           </thead>
           <tbody id="rows"></tbody>
@@ -65,7 +81,8 @@
           </div>
           <div class="row g-2 mb-3">
             <div class="col"><label class="form-label" for="t-pic">PIC (nama)</label>
-              <input class="form-control" id="t-pic" maxlength="255"></div>
+              <input class="form-control" id="t-pic" maxlength="255">
+              <div class="form-text">Terisi nama kamu, boleh diganti.</div></div>
             <div class="col"><label class="form-label" for="t-weight">Bobot (%)</label>
               <input type="number" class="form-control" id="t-weight" min="0" max="100" step="0.01" value="0"></div>
           </div>
@@ -105,6 +122,31 @@
     </div>
   </div>
 
+  <div class="modal fade" id="modal-expense" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title h5" id="exp-title">Biaya</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body">
+          <div id="exp-alert" class="alert alert-danger d-none"></div>
+          <form id="exp-form" class="row g-2 mb-3 d-none">
+            <div class="col-md-3"><input type="date" class="form-control" id="e-date" required aria-label="Tanggal"></div>
+            <div class="col-md-5"><input class="form-control" id="e-desc" maxlength="255" placeholder="Keterangan biaya" required aria-label="Keterangan"></div>
+            <div class="col-md-2"><input type="number" class="form-control" id="e-amount" min="1" step="1" placeholder="Nominal" required aria-label="Nominal"></div>
+            <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">Catat</button></div>
+          </form>
+          <table class="table table-sm">
+            <thead><tr><th>Tanggal</th><th>Keterangan</th><th class="text-end">Nominal</th><th></th></tr></thead>
+            <tbody id="exp-rows"></tbody>
+          </table>
+          <p id="exp-empty" class="text-muted small d-none">Belum ada biaya tercatat.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/app/api.js"></script>
   <script src="/app/layout.js"></script>
@@ -130,10 +172,13 @@
     let project = null;
     let tasks = [];
     let meta = {};
+    let budget = {};
+    let budgetById = {};
     let canEdit = false;
     const expanded = new Set();
     let editingId = null;
     let parentForCreate = null;
+    let expenseTask = null;
 
     function showAlert(message) {
       const box = document.getElementById('alert');
@@ -155,14 +200,22 @@
 
     async function load() {
       try {
-        const [projectResult, taskResult] = await Promise.all([
+        const [projectResult, taskResult, budgetResult] = await Promise.all([
           api('/projects/' + projectId),
           api('/projects/' + projectId + '/tasks'),
+          api('/projects/' + projectId + '/budget'),
         ]);
 
         project = projectResult.data;
         tasks = taskResult.data;
         meta = taskResult.meta || {};
+        budget = budgetResult.data || {};
+
+        budgetById = {};
+        (budget.activities || []).forEach((activity) => {
+          budgetById[activity.id] = activity;
+          (activity.subtasks || []).forEach((sub) => { budgetById[sub.id] = sub; });
+        });
 
         const user = currentUser();
         canEdit = user.role === 'project_manager'
@@ -170,6 +223,7 @@
           && EDITABLE.includes(project.status);
 
         renderHeader();
+        renderBudget();
         renderRows();
       } catch (error) {
         showAlert(error.message);
@@ -199,6 +253,20 @@
       note.classList.toggle('d-none', note.textContent === '');
     }
 
+    function renderBudget() {
+      const summary = budget.project || { plan: 0, actual: 0, remaining: 0, usage_percent: null };
+
+      document.getElementById('b-plan').textContent = formatRupiah(summary.plan);
+      document.getElementById('b-actual').textContent = formatRupiah(summary.actual);
+
+      const remaining = document.getElementById('b-remaining');
+      remaining.textContent = formatRupiah(summary.remaining);
+      remaining.className = 'h5 mb-0 ' + (summary.remaining < 0 ? 'text-danger' : 'text-success');
+
+      document.getElementById('b-percent').textContent =
+        summary.usage_percent === null ? 'N/A' : summary.usage_percent + '%';
+    }
+
     function renderRows() {
       const rows = [];
 
@@ -226,6 +294,18 @@
         expanded.add(id);
       }
       renderRows();
+    }
+
+    function budgetCells(task) {
+      const b = budgetById[task.id] || { plan: 0, actual: 0, usage_percent: null, over_budget: false };
+
+      return [
+        el('td', { class: 'text-end' }, formatRupiah(b.plan)),
+        el('td', { class: 'text-end ' + (b.over_budget ? 'text-danger' : '') },
+          formatRupiah(b.actual),
+          el('div', { class: 'small text-muted' }, b.usage_percent === null ? 'N/A' : b.usage_percent + '%')
+        ),
+      ];
     }
 
     function progressCell(task) {
@@ -274,6 +354,13 @@
 
       const actions = el('td', { class: 'text-end text-nowrap' });
 
+      if (task.is_leaf) {
+        actions.append(el('button', {
+          class: 'btn btn-sm btn-outline-dark me-1',
+          onclick: () => openExpenses(task),
+        }, 'Biaya'));
+      }
+
       if (canEdit) {
         if (isRoot) {
           actions.append(el('button', {
@@ -293,6 +380,7 @@
         weightCell,
         el('td', { class: task.is_overdue ? 'text-danger' : '' }, formatDate(task.target_end)),
         el('td', {}, badge(statusLabel, statusClass), task.is_overdue ? ' ' : '', task.is_overdue ? badge('Terlambat', 'bg-danger-subtle text-danger-emphasis') : ''),
+        budgetCells(task),
         el('td', {}, progressCell(task)),
         actions
       );
@@ -338,7 +426,7 @@
 
       document.getElementById('form-alert').classList.add('d-none');
       document.getElementById('t-name').value = task ? task.name : '';
-      document.getElementById('t-pic').value = task ? (task.pic_name || '') : '';
+      document.getElementById('t-pic').value = task ? (task.pic_name || '') : currentUser().name;
       document.getElementById('t-weight').value = task ? task.weight : 0;
       document.getElementById('t-priority').value = task ? task.priority : 'normal';
       document.getElementById('t-status').value = task ? task.status : 'not_started';
@@ -401,10 +489,88 @@
       }
     }
 
+    async function openExpenses(task) {
+      expenseTask = task;
+
+      document.getElementById('exp-title').textContent = 'Biaya: ' + task.name;
+      document.getElementById('exp-alert').classList.add('d-none');
+      document.getElementById('exp-form').classList.toggle('d-none', !canEdit);
+      document.getElementById('e-date').value = new Date().toLocaleDateString('en-CA');
+
+      await loadExpenses();
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-expense')).show();
+    }
+
+    async function loadExpenses() {
+      const box = document.getElementById('exp-alert');
+
+      try {
+        const result = await api('/tasks/' + expenseTask.id + '/expenses');
+
+        const rows = result.data.map((expense) => el('tr', {},
+          el('td', {}, formatDate(expense.expense_date)),
+          el('td', {}, expense.description),
+          el('td', { class: 'text-end' }, formatRupiah(expense.amount)),
+          el('td', { class: 'text-end' }, canEdit
+            ? el('button', { class: 'btn btn-sm btn-outline-danger', onclick: () => deleteExpense(expense) }, 'Hapus')
+            : '')
+        ));
+
+        document.getElementById('exp-rows').replaceChildren(...rows);
+        document.getElementById('exp-empty').classList.toggle('d-none', rows.length > 0);
+      } catch (error) {
+        box.textContent = formatError(error);
+        box.classList.remove('d-none');
+      }
+    }
+
+    async function saveExpense(event) {
+      event.preventDefault();
+
+      const box = document.getElementById('exp-alert');
+      box.classList.add('d-none');
+
+      try {
+        await api('/tasks/' + expenseTask.id + '/expenses', {
+          method: 'POST',
+          body: {
+            expense_date: document.getElementById('e-date').value,
+            description: document.getElementById('e-desc').value,
+            amount: Number(document.getElementById('e-amount').value),
+          },
+        });
+
+        document.getElementById('e-desc').value = '';
+        document.getElementById('e-amount').value = '';
+        await loadExpenses();
+        await load();
+      } catch (error) {
+        box.textContent = formatError(error);
+        box.classList.remove('d-none');
+      }
+    }
+
+    async function deleteExpense(expense) {
+      if (!confirm('Hapus biaya "' + expense.description + '"?')) {
+        return;
+      }
+
+      try {
+        await api('/expenses/' + expense.id, { method: 'DELETE' });
+        await loadExpenses();
+        await load();
+      } catch (error) {
+        const box = document.getElementById('exp-alert');
+        box.textContent = formatError(error);
+        box.classList.remove('d-none');
+      }
+    }
+
     if (requireLogin()) {
       renderSidebar('projects');
       document.getElementById('btn-add-root').addEventListener('click', () => openTaskModal(null, null));
       document.getElementById('task-form').addEventListener('submit', saveTask);
+      document.getElementById('exp-form').addEventListener('submit', saveExpense);
       load();
     }
   </script>
