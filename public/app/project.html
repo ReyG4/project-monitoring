@@ -44,7 +44,10 @@
 
     <div class="d-flex justify-content-between align-items-center mb-2">
       <h2 class="h5 mb-0">Aktivitas</h2>
-      <button id="btn-add-root" class="btn btn-primary btn-sm d-none">+ Tambah aktivitas</button>
+      <div class="d-flex gap-2">
+        <button id="btn-weights-root" class="btn btn-outline-primary btn-sm d-none">Atur bobot aktivitas</button>
+        <button id="btn-add-root" class="btn btn-primary btn-sm d-none">+ Tambah aktivitas</button>
+      </div>
     </div>
     <p id="weight-note" class="small mb-2"></p>
 
@@ -147,6 +150,27 @@
     </div>
   </div>
 
+  <div class="modal fade" id="modal-weights" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title h5" id="w-title">Atur bobot</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body">
+          <div id="w-alert" class="alert alert-danger d-none"></div>
+          <p class="small text-muted">Total bobot harus tepat 100% sebelum bisa disimpan.</p>
+          <div id="w-list"></div>
+          <div id="w-total" class="fw-semibold mt-3">Total: 0%</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+          <button type="button" class="btn btn-primary" id="w-save" onclick="saveWeights()">Simpan bobot</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/app/api.js"></script>
   <script src="/app/layout.js"></script>
@@ -179,6 +203,7 @@
     let editingId = null;
     let parentForCreate = null;
     let expenseTask = null;
+    let weightGroup = { parentId: null };
 
     function showAlert(message) {
       const box = document.getElementById('alert');
@@ -244,6 +269,7 @@
       statusBadge.textContent = label;
 
       document.getElementById('btn-add-root').classList.toggle('d-none', !canEdit);
+      document.getElementById('btn-weights-root').classList.toggle('d-none', !canEdit || tasks.length === 0);
 
       const note = document.getElementById('readonly-note');
       const isManager = currentUser().role === 'project_manager';
@@ -367,6 +393,13 @@
             class: 'btn btn-sm btn-outline-primary me-1',
             onclick: () => openTaskModal(null, task.id),
           }, '+ Sub'));
+
+          if (children.length) {
+            actions.append(el('button', {
+              class: 'btn btn-sm btn-outline-primary me-1',
+              onclick: () => openWeights(task.id, children, 'Bobot subaktivitas: ' + task.name),
+            }, 'Bobot sub'));
+          }
         }
         actions.append(
           el('button', { class: 'btn btn-sm btn-outline-secondary me-1', onclick: () => openTaskModal(task, null) }, 'Edit'),
@@ -566,9 +599,68 @@
       }
     }
 
+    function openWeights(parentId, items, title) {
+      weightGroup = { parentId };
+      document.getElementById('w-title').textContent = title;
+      document.getElementById('w-alert').classList.add('d-none');
+
+      document.getElementById('w-list').replaceChildren(...items.map((item) => {
+        const input = el('input', {
+          type: 'number', min: '0', max: '100', step: '0.01',
+          class: 'form-control form-control-sm text-end', style: 'width: 110px;',
+          value: String(item.weight), 'data-id': String(item.id), 'aria-label': 'Bobot ' + item.name,
+        });
+        input.addEventListener('input', updateWeightTotal);
+
+        return el('div', { class: 'd-flex justify-content-between align-items-center mb-2' },
+          el('span', {}, item.name),
+          el('div', { class: 'd-flex align-items-center gap-1' }, input, '%')
+        );
+      }));
+
+      updateWeightTotal();
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-weights')).show();
+    }
+
+    function currentWeights() {
+      return [...document.querySelectorAll('#w-list input')].map((input) => ({
+        id: Number(input.dataset.id),
+        weight: Number(input.value || 0),
+      }));
+    }
+
+    function updateWeightTotal() {
+      const total = Math.round(currentWeights().reduce((sum, item) => sum + item.weight, 0) * 100) / 100;
+      const ok = Math.abs(total - 100) < 0.01;
+      const box = document.getElementById('w-total');
+
+      box.textContent = 'Total: ' + total + '%';
+      box.className = 'fw-semibold mt-3 ' + (ok ? 'text-success' : 'text-danger');
+      document.getElementById('w-save').disabled = !ok;
+    }
+
+    async function saveWeights() {
+      const box = document.getElementById('w-alert');
+      box.classList.add('d-none');
+
+      try {
+        await api('/projects/' + projectId + '/weights', {
+          method: 'PUT',
+          body: { parent_task_id: weightGroup.parentId, weights: currentWeights() },
+        });
+
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-weights')).hide();
+        await load();
+      } catch (error) {
+        box.textContent = formatError(error);
+        box.classList.remove('d-none');
+      }
+    }
+
     if (requireLogin()) {
       renderSidebar('projects');
       document.getElementById('btn-add-root').addEventListener('click', () => openTaskModal(null, null));
+      document.getElementById('btn-weights-root').addEventListener('click', () => openWeights(null, tasks, 'Bobot aktivitas utama'));
       document.getElementById('task-form').addEventListener('submit', saveTask);
       document.getElementById('exp-form').addEventListener('submit', saveExpense);
       load();
