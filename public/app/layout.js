@@ -50,7 +50,12 @@ async function logout() {
 
 function renderSidebar(active) {
   const user = currentUser();
-  const items = [{ key: 'projects', label: 'Proyek', href: '/app/projects.html' }];
+  const viewers = ['project_manager', 'tester'];
+
+  const items = [
+    { key: 'dashboard', label: 'Dashboard', href: '/app/dashboard.html', roles: viewers },
+    { key: 'projects', label: 'Proyek', href: '/app/projects.html', roles: viewers },
+  ].filter((item) => item.roles.includes(user.role));
 
   document.getElementById('sidebar').replaceChildren(
     el('div', { class: 'brand' }, 'AC Dikari'),

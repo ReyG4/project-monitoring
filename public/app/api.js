@@ -31,7 +31,10 @@ async function api(path, options = {}) {
   const data = response.status === 204 ? null : await response.json().catch(() => null);
 
   if (!response.ok) {
-    const error = new Error((data && data.message) || 'Terjadi kesalahan.');
+    const message = response.status === 403
+      ? 'Kamu tidak punya akses untuk tindakan ini.'
+      : (data && data.message) || 'Terjadi kesalahan.';
+    const error = new Error(message);
     error.status = response.status;
     error.errors = (data && data.errors) || {};
     throw error;

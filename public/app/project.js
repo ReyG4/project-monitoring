@@ -507,6 +507,10 @@ function renderWorkflow() {
     buttons.push(el('button', { class: 'btn btn-primary btn-sm', onclick: openReview }, 'Beri review'));
   }
 
+  if (isOwner && project.status !== 'diajukan') {
+    buttons.push(el('button', { class: 'btn btn-outline-danger btn-sm', onclick: deleteProject }, 'Hapus proyek'));
+  }
+
   document.getElementById('workflow-actions').replaceChildren(...buttons);
 
   const banner = document.getElementById('review-banner');
@@ -530,6 +534,21 @@ function renderWorkflow() {
     )
   ));
   document.getElementById('review-empty').classList.toggle('d-none', reviews.length > 0);
+}
+
+async function deleteProject() {
+  if (!confirm('Hapus proyek "' + project.name + '" beserta seluruh aktivitasnya? Tindakan ini tidak bisa dibatalkan dari aplikasi.')) {
+    return;
+  }
+
+  clearAlert();
+
+  try {
+    await api('/projects/' + projectId, { method: 'DELETE' });
+    window.location.href = '/app/projects.html';
+  } catch (error) {
+    showAlert(formatError(error));
+  }
 }
 
 async function runWorkflow(action, question) {
