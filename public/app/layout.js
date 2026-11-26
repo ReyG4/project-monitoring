@@ -55,6 +55,7 @@ function renderSidebar(active) {
   const items = [
     { key: 'dashboard', label: 'Dashboard', href: '/app/dashboard.html', roles: viewers },
     { key: 'projects', label: 'Proyek', href: '/app/projects.html', roles: viewers },
+    { key: 'users', label: 'Pengguna', href: '/app/users.html', roles: ['operator'] },
   ].filter((item) => item.roles.includes(user.role));
 
   document.getElementById('sidebar').replaceChildren(

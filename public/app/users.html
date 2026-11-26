@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pengguna - AC Dikari</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/app/app.css" rel="stylesheet">
+</head>
+<body>
+  <aside id="sidebar" class="sidebar"></aside>
+
+  <main class="main">
+    <div class="d-flex justify-content-between align-items-start mb-4">
+      <div>
+        <h1 class="h3 mb-1">Manajemen Pengguna</h1>
+        <p class="text-muted mb-0">Kelola akun dan peran pengguna aplikasi.</p>
+      </div>
+      <button id="btn-add" class="btn btn-primary">+ Tambah pengguna</button>
+    </div>
+
+    <div id="alert" class="alert alert-danger d-none"></div>
+
+    <div class="card">
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr><th>Nama</th><th>Email</th><th>Peran</th><th>Status</th><th></th></tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <div class="modal fade" id="modal-user" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <form class="modal-content" id="user-form">
+        <div class="modal-header">
+          <h2 class="modal-title h5" id="u-title">Tambah pengguna</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body">
+          <div id="u-alert" class="alert alert-danger d-none"></div>
+          <div class="mb-3">
+            <label class="form-label" for="u-name">Nama</label>
+            <input class="form-control" id="u-name" maxlength="255" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="u-email">Email</label>
+            <input type="email" class="form-control" id="u-email" maxlength="255" autocomplete="off" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="u-role">Peran</label>
+            <select class="form-select" id="u-role">
+              <option value="project_manager">Project Manager</option>
+              <option value="tester">Tester</option>
+              <option value="operator">Operator</option>
+            </select>
+            <div class="form-text d-none" id="u-role-help">Kamu tidak bisa mengubah peranmu sendiri.</div>
+          </div>
+          <div class="mb-1">
+            <label class="form-label" for="u-password">Password</label>
+            <input type="password" class="form-control" id="u-password" autocomplete="new-password">
+            <div class="form-text" id="u-password-help">Minimal 8 karakter, ada huruf besar, huruf kecil, dan angka.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary" id="u-save">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/app/api.js"></script>
+  <script src="/app/layout.js"></script>
+  <script src="/app/users.js"></script>
+</body>
+</html>

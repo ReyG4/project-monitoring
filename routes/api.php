@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\ProjectBudgetController;
 use App\Http\Controllers\Api\ProjectWorkflowController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\UserController;
 
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 
@@ -27,4 +28,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('projects/{project}/review', [ProjectWorkflowController::class, 'review']);
     Route::get('projects/{project}/reviews', [ProjectWorkflowController::class, 'reviews']);
     Route::get('dashboard', DashboardController::class);
+    Route::apiResource('users', UserController::class)->except(['show', 'destroy']);
 });
