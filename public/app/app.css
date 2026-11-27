@@ -1,6 +1,16 @@
-:root { --navy: #12305c; --blue: #2563eb; --bg: #f5f8fc; --text: #1b2a41; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --navy: #12305c;
+  --blue: #2563eb;
+  --bg: #f5f8fc;
+  --text: #1b2a41;
+  --muted: #6b7c93;
+  --line: #e3eaf4;
+}
 
 body { background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; }
+.text-muted { color: var(--muted) !important; }
 
 .sidebar { position: fixed; top: 0; left: 0; width: 230px; min-height: 100vh; background: var(--navy);
   padding: 1.25rem 1rem; display: flex; flex-direction: column; }
@@ -11,6 +21,23 @@ body { background: var(--bg); color: var(--text); font-family: Inter, system-ui,
 
 .main { margin-left: 230px; padding: 2rem; }
 
-.card-project { border: 1px solid #e3eaf4; border-radius: 1rem; cursor: pointer; transition: box-shadow .15s; }
-.card-project:hover { box-shadow: 0 4px 14px rgba(18, 48, 92, .12); }
-.progress { height: .5rem; }
+.card { border-color: var(--line); border-radius: .9rem; }
+.card-project { cursor: pointer; transition: box-shadow .15s, transform .15s; }
+.card-project:hover { box-shadow: 0 6px 18px rgba(18, 48, 92, .12); transform: translateY(-1px); }
+.card-project:focus-visible { outline: 3px solid rgba(37, 99, 235, .4); }
+
+.project-icon { width: 2.5rem; height: 2.5rem; border-radius: .7rem; background: #e8f0fe; color: var(--blue);
+  display: flex; align-items: center; justify-content: center; font-weight: 700; }
+
+.pill { display: inline-flex; align-items: center; gap: .4rem; padding: .2rem .7rem; border-radius: 999px;
+  font-size: .75rem; font-weight: 600; }
+.pill::before { content: ''; width: .4rem; height: .4rem; border-radius: 50%; background: currentColor; }
+.pill-perencanaan { background: #fff4d6; color: #92600a; }
+.pill-berjalan { background: #e8f0fe; color: #1d4ed8; }
+.pill-diajukan { background: #e0f2fe; color: #0369a1; }
+.pill-revisi { background: #fee2e2; color: #b91c1c; }
+.pill-selesai { background: #dcfce7; color: #15803d; }
+
+.progress { height: .5rem; background: #eaf0fa; border-radius: 999px; }
+.progress-bar { background: var(--blue); }
+.progress-bar.bg-done { background: #16a34a; }
